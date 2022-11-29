@@ -154,32 +154,34 @@ bool lvgl_spi_driver_init(int host,
     int dma_channel,
     int quadwp_pin, int quadhd_pin)
 {
-    assert((0 <= host) && (SPI_HOST_MAX > host));
-    const char *spi_names[] = {
-        "SPI1_HOST", "SPI2_HOST", "SPI3_HOST"
-    };
+#if defined(SPI_HOST_MAX)
+        assert((SPI1_HOST <= host) && (SPI_HOST_MAX > host));
+#else
+    assert((SPI1_HOST <= host) && ((SPI3_HOST + 1) > host));
+#endif
+        const char *spi_names[] = {
+            "SPI1_HOST", "SPI2_HOST", "SPI3_HOST"};
 
-    ESP_LOGI(TAG, "Configuring SPI host %s", spi_names[host]);
-    ESP_LOGI(TAG, "MISO pin: %d, MOSI pin: %d, SCLK pin: %d, IO2/WP pin: %d, IO3/HD pin: %d",
-        miso_pin, mosi_pin, sclk_pin, quadwp_pin, quadhd_pin);
+        ESP_LOGI(TAG, "Configuring SPI host %s", spi_names[host]);
+        ESP_LOGI(TAG, "MISO pin: %d, MOSI pin: %d, SCLK pin: %d, IO2/WP pin: %d, IO3/HD pin: %d",
+                 miso_pin, mosi_pin, sclk_pin, quadwp_pin, quadhd_pin);
 
-    ESP_LOGI(TAG, "Max transfer size: %d (bytes)", max_transfer_sz);
+        ESP_LOGI(TAG, "Max transfer size: %d (bytes)", max_transfer_sz);
 
-    spi_bus_config_t buscfg = {
-        .miso_io_num = miso_pin,
-        .mosi_io_num = mosi_pin,
-        .sclk_io_num = sclk_pin,
-        .quadwp_io_num = quadwp_pin,
-        .quadhd_io_num = quadhd_pin,
-        .max_transfer_sz = max_transfer_sz
-    };
+        spi_bus_config_t buscfg = {
+            .miso_io_num = miso_pin,
+            .mosi_io_num = mosi_pin,
+            .sclk_io_num = sclk_pin,
+            .quadwp_io_num = quadwp_pin,
+            .quadhd_io_num = quadhd_pin,
+            .max_transfer_sz = max_transfer_sz};
 
-    ESP_LOGI(TAG, "Initializing SPI bus...");
-    #if defined (CONFIG_IDF_TARGET_ESP32C3)
-    dma_channel = SPI_DMA_CH_AUTO;
-    #endif
-    esp_err_t ret = spi_bus_initialize(host, &buscfg, (spi_dma_chan_t)dma_channel);
-    assert(ret == ESP_OK);
+        ESP_LOGI(TAG, "Initializing SPI bus...");
+#if defined(CONFIG_IDF_TARGET_ESP32C3)
+        dma_channel = SPI_DMA_CH_AUTO;
+#endif
+        esp_err_t ret = spi_bus_initialize(host, &buscfg, (spi_dma_chan_t)dma_channel);
+        assert(ret == ESP_OK);
 
-    return ESP_OK != ret;
+        return ESP_OK != ret;
 }
